@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Clients{% endblock title %}
+{% block content %}
+    <h2>Введіть дані клієнту</h2>
+    <div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="client">
+            <input type="text" name="client_surname" placeholder="surname">
+            <input type="text" name="client_firstname" placeholder="firstname">
+            <input type="text" name="client_patronymic" placeholder="patronymic">
+            <input type="text" name="phone_number" placeholder="phone_number">
+
+            <button type="submit">Save client</button>
+        </form>
+    </div>
+
+    <h2>Забронювати столик</h2>
+    <div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="table">
+            <input type="number" name="floor" placeholder="floor">
+            <input type="datetime-local" name="reserved_time">
+            <select name="client_id">
+                <option value="">Select client</option>
+                {% for client in client_list %}
+                    <option value="{{ client.client_id }}">
+                        {{ client.client_surname }} {{ client.client_firstname }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit">reserve</button>
+        </form>
+    </div>
+
+    <h2>reserve list</h2>
+    <div>
+    <table>
+        <tr>
+            <th>id</th>
+            <th>floor</th>
+            <th>is_busy</th>
+            <th>reserved_time</th>
+            <th>client</th>
+        </tr>
+        {% for table in table_list %}
+        <tr>
+            <td>{{ table.id }}</td>
+            <td>{{ table.floor }}</td>
+            <td>{{ table.is_busy }}</td>
+            <td>{{ table.reserved_time }}</td>
+            <td>{% if table.client %}
+                    {{ table.client.client_surname }} {{ table.client.client_firstname }}
+                {% else %}
+                    No client
+                {% endif %}
+            </td>
+
+        </tr>
+        {% endfor %}
+    </table>
+    </div>
+
+
+{% endblock content %}
