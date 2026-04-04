@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import make_aware, is_naive
+from django.contrib import messages
+from django.core.exceptions import ValidationError
 
-from apps.core.models import Client, Restaurant_Table
+from apps.core.models import Client, Restaurant_Table, Booking
 
 
 # Create your views here.
@@ -37,13 +39,30 @@ def client_table(request):
                 except Client.DoesNotExist:
                     client = None
 
-            tables = Restaurant_Table.objects.create(
-                floor = request.POST['floor'],
-                is_busy = True,
-                reserved_time = date,
-                client = client)
-            print(tables)
-            return redirect("/")
+            try:
+                table, created = Restaurant_Table.objects.get_or_create(
+                    floor=request.POST['floor'],
+                    defaults={'is_busy': True}
+                )
+
+                new_booking = Booking(
+                    table=table,
+                    client=client,
+                    booking_time=date
+                )
+                new_booking.full_clean()
+                new_booking.save()
+
+                table.is_busy = True
+                table.reserved_time = date
+                table.client = client
+                table.save()
+
+                messages.success(request, "Бронювання успішне!")
+                return redirect("/")
+            except ValidationError as e:
+                for error in e.messages:
+                    messages.error(request, error)
 
     return render(request, 'core/tables.html',
                       {"table_list" : Restaurant_Table.objects.all(),
